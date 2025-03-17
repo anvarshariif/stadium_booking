@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stadionlarni Xaritada Qidirish</title>
+    <!-- Google Fonts orqali Poppins fontini ulash -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+            rel="stylesheet"
+    />
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --secondary-color: #ffcc00;
+            --secondary-hover: #e6b800;
+            --success-color: #28a745;
+            --bg-color: #f8f9fa;
+            --header-bg: #ffffff;
+            --text-color: #333;
+            --btn-border-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: var(--header-bg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header button {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: var(--btn-border-radius);
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 16px;
+        }
+
+        .header button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Xarita konteyneri */
+        #map {
+            position: absolute;
+            top: 60px; /* header balandligi */
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Mening joylashuv tugmasi */
+        .location-btn {
+            position: absolute;
+            top: 130px; /* Yandex elementlaridan pastroq joylashishi uchun */
+            right: 20px;
+            background-color: var(--secondary-color);
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: var(--btn-border-radius);
+            cursor: pointer;
+            z-index: 1000;
+            transition: background 0.3s ease;
+        }
+
+        .location-btn:hover {
+            background-color: var(--secondary-hover);
+        }
+
+        /* Mobil moslashuv */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 15px;
+            }
+
+            .header h2 {
+                font-size: 18px;
+            }
+
+            .header button {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .location-btn {
+                top: 150px;
+                right: 15px;
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h2>Xaritadan Stadion Qidirish</h2>
+        <button id="backButton">Orqaga</button>
+    </div>
+
+    <!-- Mening joylashuv tugmasi -->
+    <!--<button class="location-btn" onclick="findUserLocation()">📍 Mening Joylashuvim</button>-->
+
+    <!-- Xarita uchun konteyner -->
+    <div id="map"></div>
+</div>
+
+<!-- Yandex Map Script -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=uz_UZ&load=package.full" type="text/javascript"></script>
+<script src="js/request.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    ymaps.ready(init);
+    let stadiums=[];
+    const urlParams = new URLSearchParams(window.location.search);
+    let userId = urlParams.get('userId');
+
+    document.getElementById('backButton').addEventListener('click', function() {
+        window.location.href = 'index.html?userId='+userId;
+    });
+    function init() {
+        var myMap = new ymaps.Map("map", {
+            center: [41.2995, 69.2401], // Toshkent koordinatalari
+            zoom: 12
+        });
+        axios({
+            url:'https://263b-178-218-201-17.ngrok-free.app/api/stadiums',
+            method:'get'
+        }).then(res=>{
+            stadiums=res.data;
+            var clusterer = new ymaps.Clusterer({
+                preset: "islands#invertedVioletClusterIcons",
+                groupByCoordinates: false,
+                clusterDisableClickZoom: false,
+                clusterHideIconOnBalloonOpen: false,
+                geoObjectHideIconOnBalloonOpen: false
+            });
+
+            var placemarks = stadiums.map(function (stadium) {
+                return new ymaps.Placemark(
+                    stadium.coords,
+                    {
+                        balloonContent: `
+              <div style="text-align:center; padding:10px; font-size:14px;">
+                <strong>${stadium.name}</strong><br>
+                ⏰ Ish vaqti: ${stadium.startTime} - ${stadium.endTime}<br>
+                <button onclick="selectStadium('${stadium.id}')" style="background:${'#28a745'}; color:#fff; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✅ Tanlash</button>
+              </div>
+            `,
+                        iconContent: 'stadium⚽️'
+                    },
+                    { preset: "islands#blueStretchyIcon" }
+                );
+            });
+
+            clusterer.add(placemarks);
+            myMap.geoObjects.add(clusterer);
+        }).catch(error => {
+            alert("Xatolik yuz berdi: " + error);
+        });
+
+        myMap.controls.add("geolocationControl");
+    }
+
+    function selectStadium(id) {
+        window.location.href = `index.html?stadiumId=`+id+'&userId='+userId;
+    }
+    window.selectStadium = selectStadium;
+
+    function findUserLocation() {
+        ymaps.geolocation
+            .get({
+                provider: "browser",
+                mapStateAutoApply: true,
+            })
+            .then(function (result) {
+                var userLocation = result.geoObjects.get(0).geometry.getCoordinates();
+                alert("Sizning joylashuvingiz: " + userLocation);
+            })
+            .catch(function (err) {
+                alert("Joylashuv aniqlanmadi: " + err.message);
+            });
+    }
+</script>
+</body>
+</html>
+

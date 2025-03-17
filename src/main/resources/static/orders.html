@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booked Time Slots</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .header h2 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .clickable-row {
+            cursor: pointer;
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: -250px;
+            background-color: #4e646b; /* Yashil sidebar */
+            padding-top: 50px; /* Yozuvlarni pastga tushirish */
+            transition: 0.3s;
+            color: white;
+        }
+
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            display: block;
+            color: white;
+        }
+
+        .sidebar a:hover {
+            background-color: #4c6367;
+        /
+        }
+
+        .sidebar .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+        .open-btn {
+            font-size: 24px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: none;
+            border: none;
+            color: #536772;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-3">
+    <div class="sidebar" id="mySidebar">
+        <span class="close-btn" onclick="closeSidebar()">&times;</span>
+        <a href="orders.html"><i class="fas fa-calendar-check"></i> band qilinganlar</a>
+        <a href="index.html"><i class="fas fa-plus-circle"></i> Band qilish</a>
+    </div>
+    <button class="open-btn" onclick="openSidebar()">☰</button>
+    <div class="header text-center">
+        <h2>Booked Time Slots</h2>
+    </div>
+
+
+
+    <!-- Filter Section -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label for="dateInput" class="form-label">Select Date:</label>
+            <input type="date" id="dateInput" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="fieldSelect">Stadion maydonini tanlang:</label>
+                <select class="form-select" id="fieldSelect" onchange="changeField()"></select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-primary m-2" id="searchButton">Qidirish</button>
+        </div>
+    </div>
+
+    <!-- Booking Details Table -->
+    <div class="mt-4">
+        <h5><strong>Booking Details</strong></h5>
+        <table class="table table-bordered">
+            <thead class="table-light">
+            <tr>
+                <th>Phone</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody id="tbody">
+            <!-- Jadval qatorlari JavaScript orqali kiritiladi -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingModalLabel">Booking Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>id:</strong> <span id="modalId"></span></p>
+                <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
+                <p><strong>Stadium Name:</strong> <span id="modalStadium"></span></p>
+                <p><strong>Field:</strong> <span id="modalField"></span></p>
+                <p><strong>Date:</strong> <span id="modalDate"></span></p>
+                <p><strong>Time:</strong> <span id="modalTime"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button id="canselOrder" class="btn btn-danger">Cancel Booking</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="js/request.js"></script>
+<script>
+    let tbody = document.getElementById("tbody");
+    let orders = [];
+    let user = Telegram.WebApp.initDataUnsafe.user;
+    let fields=[];
+    let selectedFieldId;
+    let selectedOrderId;
+
+    getStadiumForUser(user);
+    function getStadiumForUser(user) {
+        try {
+            request({
+                url:`/api/admin/fields/${user.id}`
+            }).then(res=>{
+                fields=res.data;
+                populateFieldSelect();
+            })
+        } catch (error) {
+            console.error(`Xatolik: ${error}`);
+            return [];
+        }
+    }
+
+    function populateFieldSelect() {
+        let fieldSelect = document.getElementById("fieldSelect");
+        fieldSelect.innerHTML = fields.map(field => `
+            <option value="${field.id}">
+                ${field.number}-Maydon
+            </option>
+        `).join('');
+        changeField();
+    }
+
+    function changeField() {
+        selectedFieldId = document.getElementById("fieldSelect").value;
+    }
+
+
+    document.getElementById('searchButton').addEventListener('click', function() {
+        var dateInput = document.getElementById('dateInput').value;
+        var fieldSelect = document.getElementById('fieldSelect').value;
+
+        request.get('/api/admin/orders', {
+            params: {
+                userId: user.id,
+                date: dateInput,
+                fieldId: fieldSelect
+            }
+        })
+            .then(res=> {
+                orders=res.data;
+                drawOrders();
+            })
+            .catch(function(error) {
+                console.error("orderlarni olishda xatolik:", error);
+                alert("Xatolik yuz berdi: " + error);
+            });
+    });
+
+    document.getElementById('canselOrder').addEventListener('click', function() {
+        request({
+            url: "/api/admin/orders/cancel/"+selectedOrderId,
+            method:"post"
+        })
+            .then(res=> {
+                let modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                document.getElementById('searchButton').click();
+            })
+            .catch(function(error) {
+                console.error("orderlarni o'chirishda xatolik:", error);
+                alert("Xatolik yuz berdi: " + error);
+            });
+    });
+
+    function drawOrders() {
+        let content = '';
+        orders.forEach(order => {
+            content += `
+          <tr class="clickable-row" onclick="showDetails('${order.id}','${order.phone}', '${order.stadiumName}', '${order.fieldName}', '${order.date}', '${order.time}')">
+            <td>${order.phone}</td>
+            <td>${order.date}</td>
+            <td>${order.time}</td>
+            <td>${order.status}</td>
+          </tr>
+        `;
+        });
+        tbody.innerHTML = content;
+    }
+
+    // Modalni ko'rsatish uchun booking tafsilotlarini sozlash
+    function showDetails(id,phone, stadium, field, date, time) {
+        selectedOrderId=id;
+        document.getElementById('modalId').innerText = id;
+        document.getElementById('modalPhone').innerText = phone;
+        document.getElementById('modalStadium').innerText = stadium;
+        document.getElementById('modalField').innerText = field;
+        document.getElementById('modalDate').innerText = date;
+        document.getElementById('modalTime').innerText = time;
+        let modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        modal.show();
+    }
+    function openSidebar() {
+        document.getElementById("mySidebar").style.left = "0";
+    }
+
+    function closeSidebar() {
+        document.getElementById("mySidebar").style.left = "-250px";
+    }
+    // Sahifa yuklanganda ma'lumotlarni olish
+
+</script>
+</body>
+</html>
