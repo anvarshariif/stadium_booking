@@ -13,18 +13,8 @@ public class StadiumApiWebBotApplication {
 
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(StadiumApiWebBotApplication.class, args);
-       /* try {
-            TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(new TelegramBot());
-            System.out.println("✅ Bot ishga tushdi!");
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }*/
-
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-
-            // Spring kontekstidan TelegramBot beanini olish
             TelegramBot telegramBot = context.getBean(TelegramBot.class);
             botsApi.registerBot(telegramBot);
 
@@ -32,6 +22,15 @@ public class StadiumApiWebBotApplication {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+
+        /*
+        * init datani har safar yuborish shartmi va qachon yuborishni tuzatish
+        * auth ishlamayapdi. auth tekshirilmasa ham kirib ketyapdi weappga
+        * entitydan dto ga to qilib o'tishni to'g'irlash
+        * stadionni rasmlari alohida ishlashini tekshirish
+        * admin buyurtmani bekor comment bilan bekor qilsin
+        * ownerga report chiqarish kerak
+        * */
     }
 
 }

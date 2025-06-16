@@ -9,7 +9,6 @@ import java.util.Optional;
 
 @Service
 public class TelegramBotService {
-private Integer id;
     private final UserRepository userRepository;
 
     public TelegramBotService(UserRepository userRepository) {
@@ -27,7 +26,7 @@ private Integer id;
                     .build();
             userRepository.save(user);
             return user;
-        }else {
+        } else {
             return optionalUser.get();
         }
     }

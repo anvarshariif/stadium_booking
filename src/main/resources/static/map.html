@@ -142,18 +142,14 @@
         <h2>Xaritadan Stadion Qidirish</h2>
         <button id="backButton">Orqaga</button>
     </div>
-
-    <!-- Mening joylashuv tugmasi -->
-    <!--<button class="location-btn" onclick="findUserLocation()">📍 Mening Joylashuvim</button>-->
-
-    <!-- Xarita uchun konteyner -->
     <div id="map"></div>
 </div>
 
-<!-- Yandex Map Script -->
 <script src="https://api-maps.yandex.ru/2.1/?lang=uz_UZ&load=package.full" type="text/javascript"></script>
 <script src="js/request.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="js/config.js"></script>
+
 <script>
     ymaps.ready(init);
     let stadiums=[];
@@ -169,7 +165,7 @@
             zoom: 12
         });
         axios({
-            url:'https://263b-178-218-201-17.ngrok-free.app/api/stadiums',
+            url:baseUrl+'/api/stadiums',
             method:'get'
         }).then(res=>{
             stadiums=res.data;

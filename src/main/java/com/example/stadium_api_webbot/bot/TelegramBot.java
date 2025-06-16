@@ -2,10 +2,10 @@ package com.example.stadium_api_webbot.bot;
 
 
 import com.example.stadium_api_webbot.dto.OrderDTO;
-import com.example.stadium_api_webbot.entity.BookedHour;
 import com.example.stadium_api_webbot.entity.User;
 import com.example.stadium_api_webbot.service.AdminService;
 import com.example.stadium_api_webbot.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
@@ -37,12 +37,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.adminService = adminService;
         this.userService = userService;
     }
-
-    private static final String botUsername = "@stadium_booking_bot";
-    private static final String botToken = "7769292307:AAFVgfivp9SAm7F2jjtAv93U54n63QVzI-g";
-    private static final String webAppUrl = "https://263b-178-218-201-17.ngrok-free.app/auth.html";
-
-
+    @Value("${bot.username}")
+    private  String botUsername;
+    @Value("${bot.token}")
+    private  String botToken;
+    @Value("${bot.webappUrl}")
+    private  String webAppUrl;
 
     @Override
     public String getBotUsername() {
@@ -54,50 +54,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botToken;
     }
 
-   /* @Override
-    public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
-
-            User tgUser = telegramBotService.getOrCreatTgUser(update.getMessage());
-
-            if (messageText.equals("/start")) {
-                sendWebAppButton(chatId);
-            } else if (messageText.equals("Asosiy menu")) {
-
-            } else if (messageText.equals("buyurtmalarim")) {
-
-            }
-        }
-    }
-
-    private void sendWebAppButton(long chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("WebApp'ni ochish uchun tugmani bosing:");
-
-        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-
-        InlineKeyboardButton webAppButton = new InlineKeyboardButton();
-        webAppButton.setText("📲 WebApp'ni ochish");
-        webAppButton.setWebApp(new WebAppInfo(webAppUrl));
-
-        List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(webAppButton);
-        rowsInline.add(rowInline);
-
-        keyboardMarkup.setKeyboard(rowsInline);
-        message.setReplyMarkup(keyboardMarkup);
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-*/
    @Override
    public void onUpdateReceived(Update update) {
        if (update.hasMessage() && update.getMessage().hasText()) {
@@ -183,7 +139,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    // 📌 Asosiy menyuni yuborish
     private void sendMainMenu(long chatId) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
@@ -224,11 +179,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    // 📌 Foydalanuvchining buyurtmalarini yuborish
     private void sendUserOrders(long chatId) {
         List<OrderDTO> orders = adminService.getOrdersForUser(chatId);
 
         if (orders.isEmpty()) {
+
             sendMessage(chatId, "Sizda buyurtmalar mavjud emas.");
             return;
         }
@@ -257,13 +212,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    // 📌 Oddiy matnli xabar yuborish
     private void sendMessage(long chatId, String text) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(text);
-
         try {
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId);
+            message.setText(text);
             execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();

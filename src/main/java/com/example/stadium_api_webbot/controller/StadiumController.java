@@ -16,40 +16,32 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/stadiums")
 public class StadiumController {
-
-    private final StadiumRepository stadiumRepository;
     private final FieldRepository fieldRepository;
     private final StadiumService stadiumService;
 
 
-    public StadiumController(StadiumRepository stadiumRepository,
-                             FieldRepository fieldRepository, StadiumService stadiumService) {
-        this.stadiumRepository = stadiumRepository;
+    public StadiumController(FieldRepository fieldRepository, StadiumService stadiumService) {
         this.fieldRepository = fieldRepository;
         this.stadiumService = stadiumService;
     }
 
     @GetMapping("/districts")
     public List<String> getDistricts(@RequestParam(required = false) String region) {
-        System.out.println("citila-"+stadiumService.getCities(region));
         return stadiumService.getCities(region);
     }
 
     @GetMapping()
     public HttpEntity<?> getStadiums(@ModelAttribute FilterDTO filterDTO){
        List<StadiumDTO> stadiumDTOList =stadiumService.getStadiums(filterDTO);
-        System.out.println("dtojonlar-"+stadiumDTOList);
         return ResponseEntity.ok(stadiumDTOList);
     }
     @GetMapping("/fields/{stadiumId}")
     public HttpEntity<?> getFields(@PathVariable UUID stadiumId){
-        System.out.println(fieldRepository.findByStadiumId(stadiumId));
        return ResponseEntity.ok(fieldRepository.findByStadiumId(stadiumId));
     }
     @GetMapping("/{stadiumId}")
     public ResponseEntity<?> getOneStadium(@PathVariable UUID stadiumId) {
         StadiumDTO stadiumDTO = stadiumService.getOneStadium(stadiumId);
-        System.out.println("bittasi"+stadiumDTO);
         return ResponseEntity.ok(stadiumDTO);
     }
 

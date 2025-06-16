@@ -307,7 +307,10 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="js/request.js"></script>
+<script src="js/config.js"></script>
+
 <script>
+
 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = Telegram.WebApp.initDataUnsafe.user.id;
@@ -390,7 +393,7 @@
         <div class="stadium-card"
             onclick="selectStadium('${stadium.id}')"
            >
-            <img src="https://263b-178-218-201-17.ngrok-free.app/api/file/get/${fields[0]?.photo?.id}" alt="Stadion rasmi">
+            <img src="${baseUrl}/api/file/get/${fields[0]?.photo?.id}" alt="Stadion rasmi">
             <h3>${stadium.name}</h3>
             <p>Manzil: ${stadium.region}, ${stadium.city}</p>
             <span>ish vaqti: ${stadium.startTime}:00 - ${stadium.endTime}:00</span>
@@ -429,7 +432,7 @@
             </div>
             <div class="card-body">
                 <img id="fieldImage"
-                     src="https://263b-178-218-201-17.ngrok-free.app/api/file/get/${fields[0]?.photo?.id}"
+                     src="${baseUrl}/api/file/get/${fields[0]?.photo?.id}"
                      class="img-fluid rounded"
                      style="width: 100%; height: auto; display: block; margin: 0 auto;"
                      alt="Rasm topilmadi!">

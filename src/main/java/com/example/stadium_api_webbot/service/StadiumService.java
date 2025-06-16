@@ -52,6 +52,8 @@ public class StadiumService {
                     .build();
             stadiumDTOList.add(stadiumDTO);
         }
+        System.out.println(stadiumDTOList);
+
         return stadiumDTOList;
     }
 

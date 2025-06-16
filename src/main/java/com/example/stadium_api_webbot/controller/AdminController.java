@@ -39,7 +39,7 @@ public class AdminController {
     }
     @GetMapping("/is-admin")
     public ResponseEntity<?> isAdmin(@RequestParam Long userId) {
-        boolean isAdmin = adminService.isAdmin(userId); // Admin tekshirish xizmati
+        boolean isAdmin = adminService.isAdmin(userId);
         return ResponseEntity.ok(Map.of("isAdmin", isAdmin));
     }
 }
